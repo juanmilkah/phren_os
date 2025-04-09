@@ -1,0 +1,9 @@
+[package]
+name = "phren_os"
+description = "A minimal OS"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+authors = ["Juan Milkah <juanmilkah@gmail.com"]
+
+[dependencies]
