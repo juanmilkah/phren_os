@@ -1,7 +1,19 @@
+use core::fmt::{self, Write};
+
+use lazy_static::lazy_static;
+use spin::Mutex;
 use volatile::Volatile;
 
 const BUF_HEIGHT: usize = 25;
 const BUF_WIDTH: usize = 80;
+
+lazy_static! {
+    pub static ref WRITER: Mutex<Writer> = Mutex::new(Writer {
+        col_position: 0,
+        color_code: ColorCode::new(Color::Black, Color::Yellow),
+        buffer: unsafe { &mut *(0xb8000 as *mut Buffer) },
+    });
+}
 
 #[allow(dead_code)]
 #[derive(Debug, Clone, Copy)]
@@ -75,8 +87,30 @@ impl Writer {
         }
     }
 
+    // move every character one line up (the top line gets deleted)
+    // start at the beginning of the last line again.
     fn newline(&mut self) {
-        todo!()
+        for row in 1..BUF_HEIGHT {
+            for col in 0..BUF_WIDTH {
+                let char = self.buffer.chars[row][col].read();
+                self.buffer.chars[row - 1][col].write(char);
+            }
+        }
+
+        self.clear_row(BUF_HEIGHT - 1);
+        self.col_position = 0;
+    }
+
+    // overwrite all of its characters with a space character.
+    fn clear_row(&mut self, row: usize) {
+        let blank = ScreenChar {
+            ascii_char: b' ',
+            color_code: self.color_code,
+        };
+
+        for col in 0..BUF_WIDTH {
+            self.buffer.chars[row][col].write(blank);
+        }
     }
 
     fn write_string(&mut self, s: &str) {
@@ -90,15 +124,25 @@ impl Writer {
     }
 }
 
-pub fn print_something() {
-    let c_code = ColorCode::new(Color::Black, Color::Yellow);
-    let mut writer = Writer {
-        col_position: 0,
-        color_code: c_code,
-        buffer: unsafe { &mut *(0xb8000 as *mut Buffer) },
-    };
+impl fmt::Write for Writer {
+    fn write_str(&mut self, s: &str) -> fmt::Result {
+        self.write_string(s);
+        Ok(())
+    }
+}
 
-    writer.write_byte(b'H');
-    writer.write_string("ello, ");
-    writer.write_string("from PhrenOS");
+#[macro_export]
+macro_rules! print {
+    ($($arg:tt)*) => ($crate::vga_buf::_print(format_args!($($arg)*)));
+}
+
+#[macro_export]
+macro_rules! println {
+    () => ($crate::print!("\n"));
+    ($($arg:tt)*) => ($crate::print!("{}\n", format_args!($($arg)*)));
+}
+
+#[doc(hidden)]
+pub fn _print(args: fmt::Arguments) {
+    WRITER.lock().write_fmt(args).unwrap();
 }
