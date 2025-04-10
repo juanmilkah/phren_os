@@ -7,3 +7,4 @@ license = "MIT"
 authors = ["Juan Milkah <juanmilkah@gmail.com"]
 
 [dependencies]
+bootloader = "0.11.10"
