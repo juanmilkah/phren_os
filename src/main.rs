@@ -1,13 +1,12 @@
-#![feature(custom_test_frameworks)]
-#![test_runner(phren_os::test_runner)]
 #![no_std] // don't link the Rust standard library
 #![no_main] // disable all Rust-level entry points
+#![feature(custom_test_frameworks)]
+#![test_runner(phren_os::test_runner)]
 #![reexport_test_harness_main = "test_main"]
 
 use core::panic::PanicInfo;
 
-mod serial;
-mod vga_buf;
+use phren_os::println;
 
 #[unsafe(no_mangle)]
 pub extern "C" fn _start() -> ! {
@@ -29,7 +28,5 @@ fn panic(info: &PanicInfo) -> ! {
 #[cfg(test)]
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
-    use phren_os::test_panic_handler;
-
-    test_panic_handler(info);
+    phren_os::test_panic_handler(info);
 }
