@@ -6,10 +6,15 @@
 
 use core::panic::PanicInfo;
 
-use phren_os::println;
+use phren_os::{init, println};
 
 #[unsafe(no_mangle)]
 pub extern "C" fn _start() -> ! {
+    init();
+
+    // invoke an interrupt
+    x86_64::instructions::interrupts::int3();
+
     println!("Hello from {}", "PhrenOS");
 
     #[cfg(test)]
