@@ -146,3 +146,28 @@ macro_rules! println {
 pub fn _print(args: fmt::Arguments) {
     WRITER.lock().write_fmt(args).unwrap();
 }
+
+#[test_case]
+fn t_simple() {
+    println!("testing works");
+}
+
+#[test_case]
+fn t_print_many() {
+    for _ in 0..200 {
+        println!("test writing many");
+    }
+}
+
+#[test_case]
+fn t_char_appear() {
+    let s = "This is a basic line!";
+    println!("{}", s);
+
+    for (i, c) in s.chars().enumerate() {
+        // Println appends a newline,
+        // thus the string should appear on line BUFFER_HEIGHT - 2
+        let s_char = WRITER.lock().buffer.chars[BUF_HEIGHT - 2][i].read();
+        assert_eq!(char::from(s_char.ascii_char), c);
+    }
+}

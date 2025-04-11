@@ -10,4 +10,21 @@ authors = ["Juan Milkah <juanmilkah@gmail.com"]
 bootloader = "0.9" # don't touch this dawg!!
 lazy_static = { version = "1.5.0", features = ["spin_no_std"] }
 spin = "0.10.0"
+uart_16550 = "0.3.2"
 volatile = "0.2.6"
+x86_64 = "0.15.2"
+
+# an easy way to exit QEMU from the guest system i.e when running tests
+# The isa-debug-exit device uses port-mapped I/O. 
+# The iobase parameter specifies on which port address the device should live 
+# (0xf4 is a generally unused port on the x86’s IO bus)
+# The iosize specifies the port size (0x04 means four bytes).
+[package.metadata.bootimage]
+test-args = ["-device", "isa-debug-exit,iobase=0xf4,iosize=0x04", "-serial",
+  "stdio", "-display", "none"]
+test-success-exit-code = 33
+test-timeout = 300 # in seconds
+
+[[test]]
+name = "should_panic"
+harness = false
