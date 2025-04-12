@@ -64,7 +64,7 @@ pub fn test_panic_handler(info: &PanicInfo) -> ! {
 
     exit_qemu(QemuExitCode::Failed);
 
-    loop {}
+    halt_cpu();
 }
 
 // Entry point for cargo test
@@ -73,7 +73,7 @@ pub fn test_panic_handler(info: &PanicInfo) -> ! {
 pub extern "C" fn _start() -> ! {
     init();
     test_main();
-    loop {}
+    halt_cpu();
 }
 
 #[cfg(test)]
@@ -86,4 +86,10 @@ fn panic(info: &PanicInfo) -> ! {
 pub fn init() {
     gdt::init();
     interrupts::init_idt();
+}
+
+pub fn halt_cpu() -> ! {
+    loop {
+        x86_64::instructions::hlt();
+    }
 }

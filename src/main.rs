@@ -6,7 +6,7 @@
 
 use core::panic::PanicInfo;
 
-use phren_os::{init, println};
+use phren_os::{halt_cpu, init, println};
 
 #[unsafe(no_mangle)]
 pub extern "C" fn _start() -> ! {
@@ -16,7 +16,7 @@ pub extern "C" fn _start() -> ! {
 
     #[cfg(test)]
     test_main();
-    loop {}
+    halt_cpu()
 }
 
 /// This function is called on panic.
@@ -24,7 +24,7 @@ pub extern "C" fn _start() -> ! {
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
     println!("{}", info);
-    loop {}
+    halt_cpu()
 }
 
 #[cfg(test)]
