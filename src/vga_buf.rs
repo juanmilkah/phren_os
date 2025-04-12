@@ -144,7 +144,10 @@ macro_rules! println {
 
 #[doc(hidden)]
 pub fn _print(args: fmt::Arguments) {
-    WRITER.lock().write_fmt(args).unwrap();
+    // handle deadlocks
+    x86_64::instructions::interrupts::without_interrupts(|| {
+        WRITER.lock().write_fmt(args).unwrap();
+    })
 }
 
 #[test_case]
@@ -161,13 +164,16 @@ fn t_print_many() {
 
 #[test_case]
 fn t_char_appear() {
-    let s = "This is a basic line!";
-    println!("{}", s);
-
-    for (i, c) in s.chars().enumerate() {
-        // Println appends a newline,
-        // thus the string should appear on line BUFFER_HEIGHT - 2
-        let s_char = WRITER.lock().buffer.chars[BUF_HEIGHT - 2][i].read();
-        assert_eq!(char::from(s_char.ascii_char), c);
-    }
+    // handle race conditions
+    x86_64::instructions::interrupts::without_interrupts(|| {
+        let mut writer = WRITER.lock();
+        let s = "This is a basic line!";
+        writeln!(writer, "\n{}", s).expect("Failed to write vga buf");
+        for (i, c) in s.chars().enumerate() {
+            // Println appends a newline,
+            // thus the string should appear on line BUFFER_HEIGHT - 2
+            let s_char = writer.buffer.chars[BUF_HEIGHT - 2][i].read();
+            assert_eq!(char::from(s_char.ascii_char), c);
+        }
+    })
 }
