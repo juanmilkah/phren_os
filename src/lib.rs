@@ -7,6 +7,7 @@
 
 use core::panic::PanicInfo;
 
+pub mod gdt;
 pub mod interrupts;
 pub mod serial;
 pub mod vga_buf;
@@ -83,5 +84,6 @@ fn panic(info: &PanicInfo) -> ! {
 
 // initialise Interrupt Descriptor table
 pub fn init() {
+    gdt::init();
     interrupts::init_idt();
 }

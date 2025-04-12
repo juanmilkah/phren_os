@@ -12,9 +12,6 @@ use phren_os::{init, println};
 pub extern "C" fn _start() -> ! {
     init();
 
-    // invoke an interrupt
-    x86_64::instructions::interrupts::int3();
-
     println!("Hello from {}", "PhrenOS");
 
     #[cfg(test)]
